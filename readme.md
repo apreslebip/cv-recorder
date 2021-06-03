@@ -1,8 +1,5 @@
 ## 2 channel CV recorder :v:
-Arduino code.
-
-
-:warning: **UNDER DEV**
+:warning: **UNDER DEV ARDUINO CODE**
 
 
 As you push a **button** (REC A or REC B), you can move the pot and it record it. As soon as you release the **button**, **out** give the CV recorder.
