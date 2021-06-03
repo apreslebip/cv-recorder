@@ -1,4 +1,4 @@
-## 2 channel CV recorder##
+## 2 channel CV recorder
 
 Arduino code for an simple **2 channel CV recorder**.
 
