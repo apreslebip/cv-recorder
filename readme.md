@@ -8,4 +8,5 @@ It has 2 channels with each one out and one button.
 
 I did mine 1u. I'll post pics.
 
-:phone: https://www.instagram.com/apres.lebip/
+
+:phone:  www.instagram.com/apres.lebip/
