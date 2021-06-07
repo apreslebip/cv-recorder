@@ -2,96 +2,68 @@
 #include <Wire.h>
 #include <Adafruit_MCP4725.h>
 
-Adafruit_MCP4725 dacA;
-Adafruit_MCP4725 dacB;
+Adafruit_MCP4725 dac;
 
-float recordTime = 50; //fréquence d'enregistrement
+float recordTime = 25; //recording frequency
 
-int potPin = A0; //potentiomètre
+int potPin = A0;  //potentiometer
+int resetPin = 2; //reset jack
+int recPin = 4;   //record button
 
-//int outA = 6;       channel A out PWM -> need a low pass
-int recA = 2;       //channel A record button
-int recAstate = 0;  //mise à 0 du bouton record A
-int arraySizeA = 0; //mise à 0 de la taille du tableau des voltages de A
-int countArray = 0; //comptage des steps à playback pour A
+int arraySize;  //fake array size
+int countArray; //count for the playback
+bool recState; //is it recording
 
-//int outB = 9;
-int recB = 4;
-int recBstate = 0;
-int arraySizeB = 0;
-int countBrray = 0;
+byte channelContent[1400] = {0}; //array of recorded values
 
-byte channelAcontent[100] = {0}; //stockage des voltages A
-byte channelBcontent[100] = {0};
+void reset()
+{
+  if (recState != 0)
+  {
+    countArray = 0;
+  }
+}
 
 void setup()
 {
   pinMode(potPin, INPUT);
-//  pinMode(outA, OUTPUT);
-  pinMode(recA, INPUT_PULLUP);
-  pinMode(recB, INPUT_PULLUP);
-  pinMode(outB, OUTPUT);
-
-  dacA.begin(0x60);
-  dacB.begin(0x61);
+  pinMode(resetPin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(resetPin), reset, RISING);
+  pinMode(recPin, INPUT_PULLUP);
+  dac.begin(0x60);
   Serial.begin(9600);
 }
 
 void loop()
 {
-  recAstate = digitalRead(recA); //lit le state pour sortir des loops
-  recBstate = digitalRead(recB);
+  recState = digitalRead(recPin); //read state for break the loop
 
-  if (recAstate == 1 && recBstate == 1) //reset les 2 arrays
+  if (recState == 0)
   {
-    countArray = 0;
-    countBrray = 0;
+    arraySize = 0;
+    memset(channelContent, 0, sizeof(channelContent)); //empty the array from previous values
+    countArray = 0; //playback count reset
   }
 
-  for (int i = 0; recAstate == 1; i++) //rec de A
+  for (int i = 0; recState == 0; i++)
   {
-    recAstate = digitalRead(recA);                             //relecture du state du bouton record
-    byte writevalA = map(analogRead(potPin), 0, 1023, 0, 255); //lit le pot sur A0 et le map en 8 bits
-    channelAcontent[i] = writevalA;                            //remplit channel A du tableau
-    arraySizeA++;                                              //incrémente le arraySize
-    dacA.setVoltage(channelAcontent[i], false);
-//    analogWrite(outA, channelAcontent[i]);                     reprends la valeur crée pour la sortir thru
-    countArray = 0;                                            //remets le compte des steps du playback à 0
+    recState = digitalRead(recPin);
+    byte writeval = map(analogRead(potPin), 0, 1023, 0, 255);
+    channelContent[i] = writeval;
+    arraySize++;
+    dac.setVoltage((channelContent[i] * 16), false);
     delay(recordTime);
   }
 
-  for (int i = 0; recBstate == 1; i++)
-  {
-    recBstate = digitalRead(recB);
-    byte writevalB = map(analogRead(potPin), 0, 1023, 0, 255);
-    channelBcontent[i] = writevalB;
-    arraySizeB++;
-    dacB.setVoltage(channelBcontent[i], false);
-//    analogWrite(outB, channelBcontent[i]);
-    countBrray = 0;
-    delay(recordTime);
-  }
+  dac.setVoltage((channelContent[countArray] * 16), false); //shoot playback
 
-  dacA.setVoltage(channelAcontent[countArray], false);
-  //analogWrite(outA, channelAcontent[countArray]);              //playback la valeur du step du array
-  if (countArray <= arraySizeA)
+  if (countArray <= arraySize)
   {
-    countArray++; //incrémente pour passer au step d'après si ce n'étais pas le dernier step
+    countArray++; //if not last value of the array, increment
   }
   else
   {
-    countArray = 0; //si dernier step, remise à 0 pour playback en boucle
-  }
-
-  dacB.setVoltage(channelAcontent[countArray], false);
-//  analogWrite(outB, channelBcontent[countBrray]);
-  if (countBrray <= arraySizeB)
-  {
-    countBrray++;
-  }
-  else
-  {
-    countBrray = 0;
+    countArray = 0; //if last value of the array, reset
   }
 
   delay(recordTime);
