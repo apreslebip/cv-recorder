@@ -26,7 +26,7 @@ byte channelBcontent[100] = {0};
 void setup()
 {
   pinMode(potPin, INPUT);
-  pinMode(outA, OUTPUT);
+//  pinMode(outA, OUTPUT);
   pinMode(recA, INPUT_PULLUP);
   pinMode(recB, INPUT_PULLUP);
   pinMode(outB, OUTPUT);
@@ -52,7 +52,7 @@ void loop()
     byte writevalA = map(analogRead(potPin), 0, 1023, 0, 255); //lit le pot sur A0 et le map en 8 bits
     channelAcontent[i] = writevalA;                            //remplit channel A du tableau
     arraySizeA++;                                              //incrémente le arraySize
-    analogWrite(outA, channelAcontent[i]);                     //reprends la valeur crée pour la sortir thru
+//    analogWrite(outA, channelAcontent[i]);                     reprends la valeur crée pour la sortir thru
     countArray = 0;                                            //remets le compte des steps du playback à 0
     delay(recordTime);
   }
