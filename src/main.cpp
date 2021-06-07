@@ -2,7 +2,8 @@
 #include <Wire.h>
 #include <Adafruit_MCP4725.h>
 
-Adafruit_MCP4725 dac;
+Adafruit_MCP4725 dacA;
+Adafruit_MCP4725 dacB;
 
 float recordTime = 50; //fréquence d'enregistrement
 
@@ -14,7 +15,7 @@ int recAstate = 0;  //mise à 0 du bouton record A
 int arraySizeA = 0; //mise à 0 de la taille du tableau des voltages de A
 int countArray = 0; //comptage des steps à playback pour A
 
-int outB = 9;
+//int outB = 9;
 int recB = 4;
 int recBstate = 0;
 int arraySizeB = 0;
@@ -31,7 +32,8 @@ void setup()
   pinMode(recB, INPUT_PULLUP);
   pinMode(outB, OUTPUT);
 
-  dac.begin(0x60);
+  dacA.begin(0x60);
+  dacB.begin(0x61);
   Serial.begin(9600);
 }
 
@@ -52,6 +54,7 @@ void loop()
     byte writevalA = map(analogRead(potPin), 0, 1023, 0, 255); //lit le pot sur A0 et le map en 8 bits
     channelAcontent[i] = writevalA;                            //remplit channel A du tableau
     arraySizeA++;                                              //incrémente le arraySize
+    dacA.setVoltage(channelAcontent[i], false);
 //    analogWrite(outA, channelAcontent[i]);                     reprends la valeur crée pour la sortir thru
     countArray = 0;                                            //remets le compte des steps du playback à 0
     delay(recordTime);
@@ -63,12 +66,13 @@ void loop()
     byte writevalB = map(analogRead(potPin), 0, 1023, 0, 255);
     channelBcontent[i] = writevalB;
     arraySizeB++;
-    analogWrite(outB, channelBcontent[i]);
+    dacB.setVoltage(channelBcontent[i], false);
+//    analogWrite(outB, channelBcontent[i]);
     countBrray = 0;
     delay(recordTime);
   }
 
-  dac.setVoltage(channelAcontent[countArray], false);
+  dacA.setVoltage(channelAcontent[countArray], false);
   //analogWrite(outA, channelAcontent[countArray]);              //playback la valeur du step du array
   if (countArray <= arraySizeA)
   {
@@ -79,7 +83,8 @@ void loop()
     countArray = 0; //si dernier step, remise à 0 pour playback en boucle
   }
 
-  analogWrite(outB, channelBcontent[countBrray]);
+  dacB.setVoltage(channelAcontent[countArray], false);
+//  analogWrite(outB, channelBcontent[countBrray]);
   if (countBrray <= arraySizeB)
   {
     countBrray++;
